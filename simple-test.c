@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "byos.h"
-#include "byos.c"
 
 int main(void)
 {
