@@ -9,6 +9,8 @@
 #include "byos.h"
 // Find out what other #include's you need! (E.g., see man pages.)
 
+int interp_rec(const struct cmd *c);
+
 void return_from_command(int *fd) {
     if ((*fd) != STDOUT_FILENO) {
         close(*fd);
@@ -72,6 +74,16 @@ int list(int fd, const struct cmd *c) {
     int return_val = 0;
     int fd_list = fd;
     for (int i = 0; i < c->data.list.n; i++) {
+
+        if ( c->data.list.cmds[i].redir_stdout != NULL) {
+            int fd_tmp = creat(c->data.list.cmds[i].redir_stdout, 0666);
+            printf("truncate %s (%d)\n", c->data.list.cmds[i].redir_stdout, fd_tmp);
+            if (fd_tmp == -1) {
+                perror("truncate file");
+                exit(1);
+            }
+            close(fd_tmp);
+        }
         // save stdout_redir file currently in command and change it to fd
         bool req_redir = false;
         if (c->data.list.cmds[i].redir_stdout == NULL &&  c->redir_stdout != NULL) {
@@ -80,18 +92,12 @@ int list(int fd, const struct cmd *c) {
             req_redir = true;
         }
         
-        // call command
-        // if (c->data.list.cmds[i].type == ECHO) {
-        //     return_val = echo(fd, &(c->data.list.cmds[i]));
-        // }
-        // else if (c->data.list.cmds[i].type == FORX) {
-        //     return_val = forx(fd, &(c->data.list.cmds[i]));
-        // }
-        // else if (c->data.list.cmds[i].type == LIST) {
-        //     return_val = list(fd, &(c->data.list.cmds[i]));
-        // }
-        return_val = interp(&(c->data.list.cmds[i]));
         
+        if (c->data.list.cmds[i].type == LIST)
+            return_val = interp(&(c->data.list.cmds[i]));
+        else
+            return_val = interp_rec(&(c->data.list.cmds[i]));
+
         // restore command's redirection info
         if (req_redir) {
             free(c->data.list.cmds[i].redir_stdout);
@@ -110,6 +116,41 @@ int list(int fd, const struct cmd *c) {
     return return_val;
 }
 
+int interp_rec(const struct cmd *c)
+{
+    int fd;
+    if (c->redir_stdout == NULL) {
+        printf("set fd to stdout\n");
+        fd = STDOUT_FILENO;
+    }
+    else {
+        fd = open(c->redir_stdout, O_WRONLY|O_CREAT|O_APPEND, 0666);
+        printf("REC redirect stdout to %s (%d)\n", c->redir_stdout, fd);
+        if (fd == -1) {
+            perror("open redirection file");
+            exit(1);
+        }
+    }
+    
+    // ECHO
+    if (c->type == ECHO) {
+        printf("\tcalling echo\n");
+        return echo(fd, c);
+    } 
+
+    // FORX
+    else if (c->type == FORX) {
+        printf("\tcalling forx\n");
+        return forx(fd, c);
+    }
+
+    // LIST
+    else if (c->type == LIST) {
+        printf("\tcalling list\n");
+        return list(fd, c);
+    }
+}
+
 int interp(const struct cmd *c)
 {
     int fd;
@@ -119,7 +160,7 @@ int interp(const struct cmd *c)
     }
     else {
         fd = creat(c->redir_stdout, 0666);
-        // printf("redirect stdout to %s (%d)\n", c->redir_stdout, fd);
+        printf("redirect stdout to %s (%d)\n", c->redir_stdout, fd);
         if (fd == -1) {
             perror("open redirection file");
             exit(1);
