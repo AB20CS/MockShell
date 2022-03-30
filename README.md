@@ -10,7 +10,7 @@ The `write` function is used to write the given string to the desired file.
 This is command is implemented by setting up a pipe between the parent process and child process (created by forking after the `forx` command is called). The desired program is executed in the child process using `execvp`. Then, output of the executed program is redirected from `stdout` (using `dup2`) and is sent to the parent process via the pipe.
 
 #### List
-The list command is implemented using recursion where `interp` (or its analogue `interp_rec`) is called as each command is received (for more information about each of these functions, please consult the **Function Overview** section and the **Handling Redirection of `stdout`** subsection below). When either of these functions are called, the program iterates over the commands in the list and executes them sequentially.
+The list command is implemented using recursion where `interp` (or its analogue `interp_rec`) is called as each command is received (for more information about each of these functions, please consult the the **Handling Redirection of `stdout`** subsection and **Function Overview** section below). When either of these functions are called, the program iterates over the commands in the list and executes them sequentially.
 
 #### Handling Redirection of `stdout`
 There are two cases to handle:
@@ -23,7 +23,18 @@ _Case 2:_ In this case, the output file depends on the output file specified for
 
 
 ## Function Overview
+#### Primary Functions
+| Function | Description |
+| --- | --- |
+| `interp(const struct cmd *c)` | Handles commands that are not part of a list, where `c` is the struct holding the command. the Refer to _Case 1_ in **Handling Redirection of `stdout`** subsection above. |
+| `interp_rec(const struct cmd *c)` | Handles commands that are part of a list, where `c` is the struct holding the command. the Refer to _Case 2_ in **Handling Redirection of `stdout`** subsection above. |
 
+#### Helper Functions
+| Function | Description |
+| --- | --- |
+| `echo(int fd, const struct *c)` | Executes the echo command, where `fd` is the file descriptor for the output file and `c` is the struct holding the command. |
+| `forx(int fd, const struct *c)` | Executes the forx command, where `fd` is the file descriptor for the output file and `c` is the struct holding the command. |
+| `list(int fd, const struct *c)` | Executes the list command, where `fd` is the file descriptor for the output file and `c` is the struct holding the command. |
 
 ## Running the Program
 
