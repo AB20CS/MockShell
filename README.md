@@ -49,8 +49,8 @@ $ ls
 Makefile  byos.h  byos.c  inputs.c
 $ make
 gcc  -c -o byos.o byos.c
-gcc  -c -o simple-test.o simple-test.c
-gcc -o simple-test byos.o simple-test.o
+gcc  -c -o simple-test.o inputs.c
+gcc -o simple-test byos.o inputs.o
 $ ./inputs
 [OUTPUT DISPLAYED HERE]
 ```
