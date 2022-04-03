@@ -42,3 +42,15 @@ _Case 2:_ In this case, the output file depends on the output file specified for
 2. `Makefile` has currently been configured to handle inputs specified in a file called `simple-test.c`. Please substitute all occurrences of `simple-test` in the `Makefile` with the name excluding the `.c` extension of the C file containing the input commands  (e.g., if the file containing the inputs is `commands.c`, replace all occurrences of `simple-test` with `commands`.
 3. Enter `make` into the terminal to compile the program.
 4. Enter `./file` where `file` is the name excluding the `.c` extension of the C file containing the input commands.
+
+_Example:_
+```
+$ ls
+Makefile  byos.h  byos.c  inputs.c
+$ make
+gcc  -c -o byos.o byos.c
+gcc  -c -o simple-test.o simple-test.c
+gcc -o simple-test byos.o simple-test.o
+$ ./inputs
+[OUTPUT DISPLAYED HERE]
+```
