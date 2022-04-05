@@ -27,7 +27,7 @@ int echo(int fd, const struct cmd *c) {
 
 int forx(int fd, const struct cmd *c) {
     pid_t pid;
-    int status, exit_status;
+    int status;
     
     int pipefd[2];
     pipe(pipefd);
@@ -65,8 +65,9 @@ int forx(int fd, const struct cmd *c) {
         else if (WIFSIGNALED(status)) {
             return_from_command(&fd);
             return 128 + WTERMSIG(status);
-        }
+        }   
     }
+    return -1;
 }
 
 int list(int fd, const struct cmd *c) {
@@ -77,7 +78,6 @@ int list(int fd, const struct cmd *c) {
 
         if ( c->data.list.cmds[i].redir_stdout != NULL) {
             int fd_tmp = creat(c->data.list.cmds[i].redir_stdout, 0666);
-            printf("truncate %s (%d)\n", c->data.list.cmds[i].redir_stdout, fd_tmp);
             if (fd_tmp == -1) {
                 perror("truncate file");
                 exit(1);
@@ -120,12 +120,10 @@ int interp_rec(const struct cmd *c)
 {
     int fd;
     if (c->redir_stdout == NULL) {
-        printf("set fd to stdout\n");
         fd = STDOUT_FILENO;
     }
     else {
         fd = open(c->redir_stdout, O_WRONLY|O_CREAT|O_APPEND, 0666);
-        printf("REC redirect stdout to %s (%d)\n", c->redir_stdout, fd);
         if (fd == -1) {
             perror("open redirection file");
             exit(1);
@@ -134,33 +132,30 @@ int interp_rec(const struct cmd *c)
     
     // ECHO
     if (c->type == ECHO) {
-        printf("\tcalling echo\n");
         return echo(fd, c);
     } 
 
     // FORX
     else if (c->type == FORX) {
-        printf("\tcalling forx\n");
         return forx(fd, c);
     }
 
     // LIST
     else if (c->type == LIST) {
-        printf("\tcalling list\n");
         return list(fd, c);
     }
+
+    return -1;
 }
 
 int interp(const struct cmd *c)
 {
     int fd;
     if (c->redir_stdout == NULL) {
-        // printf("write to stdout\n");
         fd = STDOUT_FILENO;
     }
     else {
         fd = creat(c->redir_stdout, 0666);
-        printf("redirect stdout to %s (%d)\n", c->redir_stdout, fd);
         if (fd == -1) {
             perror("open redirection file");
             exit(1);
@@ -181,4 +176,6 @@ int interp(const struct cmd *c)
     else if (c->type == LIST) {
         return list(fd, c);
     }
+
+    return -1;
 }
